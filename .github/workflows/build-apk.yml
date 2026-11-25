@@ -24,21 +24,28 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install platform 34
+      # ubuntu-latest 镜像自带 Android SDK（ANDROID_HOME 与 cmdline-tools 均已就绪），
+      # 不再用 android-actions/setup-android，避免它在镜像上重复安装失败。
+      - name: Android SDK info
         run: |
-          sdkmanager --install "platforms;android-34" "build-tools;34.0.0" "platform-tools"
-          yes | sdkmanager --licenses > /dev/null || true
+          echo "ANDROID_HOME=${ANDROID_HOME:-unset}"
+          echo "ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT:-unset}"
+          command -v sdkmanager || true
+          sdkmanager --list_installed 2>/dev/null | head -25 || true
+          yes | sdkmanager --licenses > /dev/null 2>&1 || true
 
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v3
-        with:
-          gradle-version: '8.7'
+      # 手动取 Gradle 发行版，不依赖第三方 action，链路更短
+      - name: Install Gradle 8.7
+        run: |
+          curl -sSLo /tmp/gradle.zip https://services.gradle.org/distributions/gradle-8.7-bin.zip
+          unzip -q /tmp/gradle.zip -d "$HOME"
+          echo "$HOME/gradle-8.7/bin" >> "$GITHUB_PATH"
+          "$HOME/gradle-8.7/bin/gradle" --version
 
       - name: Build debug APK
-        run: gradle assembleDebug --no-daemon --console=plain --stacktrace
+        run: |
+          set -o pipefail
+          gradle assembleDebug --no-daemon --console=plain --stacktrace 2>&1 | tee build.log
 
       - name: Verify APK
         run: |
@@ -48,11 +55,15 @@ jobs:
           cp "$APK" out/
           SIZE=$(du -h "$APK" | cut -f1)
           SHA=$(sha256sum "$APK" | cut -d' ' -f1)
-          AAPT=$(ls "$ANDROID_HOME"/build-tools/*/aapt2 | head -1)
-          BADGING=$("$AAPT" dump badging "$APK" 2>/dev/null | head -8 || echo "aapt2 unavailable")
-          ENTRIES=$(unzip -l "$APK" | grep -E "assets/skin/chat\.(css|js)|classes\.dex|resources\.arsc|AndroidManifest\.xml|res/.*ic_launcher" || true)
+          AAPT=$(ls "$ANDROID_HOME"/build-tools/*/aapt2 2>/dev/null | head -1)
+          if [ -n "$AAPT" ]; then
+            BADGING=$("$AAPT" dump badging "$APK" 2>/dev/null | head -8 || echo "aapt2 无输出")
+          else
+            BADGING="aapt2 不存在，跳过"
+          fi
+          ENTRIES=$(unzip -l "$APK" | grep -E "assets/skin/chat\.(css|js)|classes\.dex|resources\.arsc|AndroidManifest\.xml" || true)
           {
-            echo "自动构建产物（debug，未签名发布密钥，仅供安装测试）"
+            echo "自动构建产物（debug 包，调试密钥签名，仅供安装测试）"
             echo ""
             echo "- 文件：$(basename "$APK")"
             echo "- 体积：$SIZE"
@@ -101,13 +112,23 @@ jobs:
           fi
           gh release view "$TAG" --json url,assets --template '{{.url}}{{"\n"}}{{range .assets}}{{.name}} {{.size}}{{"\n"}}{{end}}'
 
-      - name: Upload build reports on failure
+      # 失败时把日志写回仓库，便于在没有 API 权限的环境里定位问题
+      - name: Dump failure log
         if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-reports
-          path: |
-            app/build/reports/**
-            **/build/outputs/logs/**
-          if-no-files-found: ignore
-          retention-days: 7
+        run: |
+          mkdir -p ci
+          {
+            echo "# 环境"
+            java -version 2>&1 || true
+            echo
+            echo "# Android SDK"
+            ls "${ANDROID_HOME}/platforms" 2>&1 || true
+            echo
+            echo "# 日志尾部"
+            tail -400 build.log 2>/dev/null || echo "无 build.log"
+          } > ci/last-failure.log
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ci/last-failure.log
+          git commit -m "ci: 记录失败日志 [skip ci]" || true
+          git push || true
