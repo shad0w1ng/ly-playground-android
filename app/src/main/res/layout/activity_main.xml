@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/app_bg">
+
+    <WebView
+        android:id="@+id/web"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- 启动 / 首屏加载遮罩 -->
+    <LinearLayout
+        android:id="@+id/loading_panel"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/app_bg"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <ProgressBar
+            android:layout_width="26dp"
+            android:layout_height="26dp"
+            android:indeterminateTint="@color/accent" />
+
+        <TextView
+            android:id="@+id/loading_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:letterSpacing="0.02"
+            android:text="@string/loading_title"
+            android:textColor="@color/text_2"
+            android:textSize="13sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="@string/loading_hint"
+            android:textColor="@color/text_3"
+            android:textSize="11sp" />
+    </LinearLayout>
+
+    <!-- 网络 / 服务异常 -->
+    <LinearLayout
+        android:id="@+id/error_panel"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/app_bg"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:paddingStart="36dp"
+        android:paddingEnd="36dp"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_state_offline" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:text="@string/error_title"
+            android:textColor="@color/text"
+            android:textSize="17sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/error_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:lineSpacingExtra="3dp"
+            android:text="@string/error_generic"
+            android:textColor="@color/text_2"
+            android:textSize="13sp" />
+
+        <Button
+            android:id="@+id/error_retry"
+            android:layout_width="match_parent"
+            android:layout_height="46dp"
+            android:layout_marginTop="24dp"
+            android:background="@drawable/btn_primary"
+            android:text="@string/error_retry"
+            android:textAllCaps="false"
+            android:textColor="@color/white"
+            android:textSize="14sp" />
+
+        <Button
+            android:id="@+id/error_external"
+            android:layout_width="match_parent"
+            android:layout_height="46dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/btn_ghost"
+            android:text="@string/error_open_browser"
+            android:textAllCaps="false"
+            android:textColor="@color/text_2"
+            android:textSize="14sp" />
+    </LinearLayout>
+
+</FrameLayout>

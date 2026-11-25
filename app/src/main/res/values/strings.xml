@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">77625 Playground</string>
+
+    <string name="loading_title">正在载入对话…</string>
+    <string name="loading_hint">首次打开需要先登录站点账号</string>
+
+    <string name="error_title">暂时打不开页面</string>
+    <string name="error_generic">页面加载失败，请检查网络后重试。</string>
+    <string name="error_dns">域名解析失败，请检查网络或 DNS 设置。</string>
+    <string name="error_connect">无法连接到服务器，请检查网络后重试。</string>
+    <string name="error_timeout">连接超时，请稍后重试。</string>
+    <string name="error_retry">重新加载</string>
+    <string name="error_open_browser">用浏览器打开</string>
+
+    <string name="press_again_to_exit">再按一次返回键退出</string>
+    <string name="session_expired">登录状态已失效，请重新登录</string>
+    <string name="no_file_picker">没有可用的文件选择器</string>
+</resources>

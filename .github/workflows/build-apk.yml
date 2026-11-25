@@ -1,0 +1,113 @@
+name: Build APK
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: assembleDebug
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install platform 34
+        run: |
+          sdkmanager --install "platforms;android-34" "build-tools;34.0.0" "platform-tools"
+          yes | sdkmanager --licenses > /dev/null || true
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.7'
+
+      - name: Build debug APK
+        run: gradle assembleDebug --no-daemon --console=plain --stacktrace
+
+      - name: Verify APK
+        run: |
+          set -e
+          mkdir -p out
+          APK=$(ls app/build/outputs/apk/debug/*.apk | head -1)
+          cp "$APK" out/
+          SIZE=$(du -h "$APK" | cut -f1)
+          SHA=$(sha256sum "$APK" | cut -d' ' -f1)
+          AAPT=$(ls "$ANDROID_HOME"/build-tools/*/aapt2 | head -1)
+          BADGING=$("$AAPT" dump badging "$APK" 2>/dev/null | head -8 || echo "aapt2 unavailable")
+          ENTRIES=$(unzip -l "$APK" | grep -E "assets/skin/chat\.(css|js)|classes\.dex|resources\.arsc|AndroidManifest\.xml|res/.*ic_launcher" || true)
+          {
+            echo "自动构建产物（debug，未签名发布密钥，仅供安装测试）"
+            echo ""
+            echo "- 文件：$(basename "$APK")"
+            echo "- 体积：$SIZE"
+            echo "- SHA256：\`$SHA\`"
+            echo ""
+            echo "<details><summary>aapt2 badging</summary>"
+            echo ""
+            echo '```'
+            echo "$BADGING"
+            echo '```'
+            echo "</details>"
+            echo ""
+            echo "<details><summary>关键条目</summary>"
+            echo ""
+            echo '```'
+            echo "$ENTRIES"
+            echo '```'
+            echo "</details>"
+          } > out/report.md
+          cat out/report.md
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug
+          path: out/*.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish release
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -e
+          TAG=latest-build
+          APK=$(ls out/*.apk | head -1)
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            gh release upload "$TAG" "$APK" --clobber
+            gh release edit "$TAG" --notes-file out/report.md
+          else
+            gh release create "$TAG" "$APK" \
+              --title "最新构建" \
+              --notes-file out/report.md \
+              --latest
+          fi
+          gh release view "$TAG" --json url,assets --template '{{.url}}{{"\n"}}{{range .assets}}{{.name}} {{.size}}{{"\n"}}{{end}}'
+
+      - name: Upload build reports on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-reports
+          path: |
+            app/build/reports/**
+            **/build/outputs/logs/**
+          if-no-files-found: ignore
+          retention-days: 7

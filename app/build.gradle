@@ -1,0 +1,47 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'xyz.ly77625.playground'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "xyz.ly77625.playground"
+        minSdk 24
+        targetSdk 34
+        versionCode 1
+        versionName "1.0.0"
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    buildTypes {
+        debug {
+            versionNameSuffix "-debug"
+        }
+        release {
+            // 纯 WebView 壳，不做混淆，避免 @JavascriptInterface 被裁剪
+            minifyEnabled false
+            shrinkResources false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    lint {
+        abortOnError false
+        checkReleaseBuilds false
+    }
+}
+
+// 本工程刻意不引入任何第三方依赖（含 AndroidX），
+// 因此首次同步只需要下载 AGP 与 Gradle 本身，离线环境也能编译。
+dependencies {
+}

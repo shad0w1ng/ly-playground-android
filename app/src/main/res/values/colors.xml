@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 与站点主体配色（paper / ink 绿）保持一致 -->
+    <color name="app_bg">#F5F3EE</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="surface_2">#F6F4EF</color>
+    <color name="line">#E5E2D8</color>
+    <color name="text">#26281F</color>
+    <color name="text_2">#565A4C</color>
+    <color name="text_3">#8B8F80</color>
+    <color name="accent">#20634B</color>
+    <color name="accent_dark">#174D3B</color>
+    <color name="white">#FFFFFF</color>
+    <color name="ic_launcher_background">#F5F3EE</color>
+</resources>

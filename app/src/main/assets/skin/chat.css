@@ -1,0 +1,405 @@
+/* ============================================================================
+ * 77625 Playground · 移动端聊天皮肤
+ *
+ * 只做「布局 + 视觉」增强，不改动站点任何业务逻辑、不新增任何接口调用：
+ *   - 首页（聊天）锁定为一屏高度，仅消息区滚动，输入框常驻底部
+ *   - 会话列表收进左侧抽屉，聊天头部保留菜单入口
+ *   - 气泡、输入框、发送按钮按聊天软件尺寸重排
+ * 所有规则都挂在 html.ly-chat / html.ly-app 下，路由切走即自动失效。
+ * ==========================================================================*/
+
+html.ly-app {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+html.ly-app,
+html.ly-app body {
+  overscroll-behavior-y: none;
+}
+
+html.ly-app a,
+html.ly-app button,
+html.ly-app .msg {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html.ly-app ::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+/* ---------------------------------------------------------------------------
+ * 1. 聊天态：整页锁定高度
+ * -------------------------------------------------------------------------*/
+
+html.ly-chat,
+html.ly-chat body {
+  height: 100%;
+  overflow: hidden !important;
+  background: var(--surface);
+}
+
+html.ly-chat #mobile-topbar,
+html.ly-chat #back-top {
+  display: none !important;
+}
+
+html.ly-chat #main-view {
+  display: block !important;
+  height: 100%;
+  min-height: 0 !important;
+  overflow: hidden;
+}
+
+html.ly-chat #content {
+  padding: 0 !important;
+  margin: 0 !important;
+  max-width: none !important;
+  width: 100% !important;
+}
+
+/* 聊天页的祖先容器全部压平，避免卡片边框/内边距占掉一屏 */
+html.ly-chat .ly-flat {
+  padding: 0 !important;
+  margin: 0 !important;
+  background: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  min-height: 0 !important;
+  max-width: none !important;
+}
+
+/* 固定铺满视口：无论站点把 .pg-layout 放在卡片还是 fragment 里都不受影响 */
+html.ly-chat .pg-layout {
+  position: fixed !important;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: auto !important;
+  min-height: 0 !important;
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  z-index: 40;
+  background: var(--surface);
+}
+
+html.ly-chat .chat-box {
+  height: 100% !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  position: relative;
+  overflow: hidden;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: var(--surface) !important;
+}
+
+/* 兜底：JS 没能定位到消息区时，仍让中间块吃掉剩余高度并可滚动 */
+html.ly-chat .chat-box > *:not(.chat-head):not(.chat-input):not(.ly-backdrop):not(.ly-tobottom) {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+}
+
+/* ---------------------------------------------------------------------------
+ * 2. 聊天头部
+ * -------------------------------------------------------------------------*/
+
+html.ly-chat .chat-head {
+  flex: 0 0 auto;
+  gap: 6px !important;
+  padding: 8px 10px !important;
+  flex-wrap: nowrap !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  scrollbar-width: none;
+  background: var(--glass) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  backdrop-filter: blur(16px) saturate(1.2);
+  border-bottom: 1px solid var(--line) !important;
+  position: relative;
+  z-index: 3;
+}
+
+html.ly-chat .chat-head b {
+  flex: 0 0 auto !important;
+  margin-right: 0 !important;
+  font-size: 15px !important;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+html.ly-chat .chat-head select {
+  flex: 0 0 auto !important;
+  width: auto !important;
+  max-width: 42vw !important;
+  height: 32px !important;
+  padding: 0 6px !important;
+  font-size: 13px !important;
+  border-radius: 9px !important;
+}
+
+html.ly-chat .chat-head button {
+  flex: 0 0 auto !important;
+  height: 32px !important;
+  padding: 0 10px !important;
+  font-size: 12.5px !important;
+  border-radius: 9px !important;
+  white-space: nowrap;
+}
+
+/* 注入的图标按钮 */
+html.ly-chat .chat-head .ly-hbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0 !important;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--surface);
+  color: var(--text-2);
+  transition: background 0.16s ease, transform 0.16s ease;
+}
+
+html.ly-chat .chat-head .ly-hbtn:active {
+  background: var(--surface-3);
+  transform: scale(0.94);
+}
+
+html.ly-chat .chat-head .ly-hbtn svg {
+  width: 17px;
+  height: 17px;
+  display: block;
+}
+
+/* ---------------------------------------------------------------------------
+ * 3. 消息列表
+ * -------------------------------------------------------------------------*/
+
+html.ly-chat #chat-scroll,
+html.ly-chat .ly-scroll {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 14px 12px 12px !important;
+  gap: 8px !important;
+  background: var(--surface-2) !important;
+}
+
+html.ly-chat #chat-scroll .empty {
+  margin: auto;
+}
+
+/* 消息不多时贴着底部起排，符合聊天软件习惯；内容超高时该外边距自动归零 */
+html.ly-chat #chat-scroll > *:first-child {
+  margin-top: auto;
+}
+
+html.ly-chat .msg {
+  max-width: 88% !important;
+  border-radius: 18px !important;
+  padding: 10px 14px !important;
+  font-size: 14.5px !important;
+  line-height: 1.62 !important;
+}
+
+html.ly-chat .msg.user {
+  border-bottom-right-radius: 6px !important;
+}
+
+html.ly-chat .msg.assistant {
+  border-bottom-left-radius: 6px !important;
+}
+
+html.ly-chat .msg .meta {
+  font-size: 10.5px !important;
+  margin-top: 7px !important;
+  gap: 3px !important;
+  opacity: 0.86;
+}
+
+html.ly-chat .msg .md {
+  font-size: inherit;
+  line-height: inherit;
+}
+
+html.ly-chat .msg pre {
+  border-radius: 10px !important;
+}
+
+html.ly-chat .msg .md table {
+  font-size: 12.5px !important;
+}
+
+html.ly-chat .pg-empty {
+  padding: 34px 20px 26px !important;
+}
+
+/* ---------------------------------------------------------------------------
+ * 4. 输入区
+ * -------------------------------------------------------------------------*/
+
+html.ly-chat .chat-input {
+  flex: 0 0 auto !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: flex-end !important;
+  gap: 8px !important;
+  padding: 9px 10px 10px !important;
+  background: var(--glass) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  backdrop-filter: blur(18px) saturate(1.2);
+  border-top: 1px solid var(--line) !important;
+  box-shadow: 0 -8px 24px rgba(30, 33, 24, 0.045);
+  position: relative;
+  z-index: 4;
+}
+
+html.ly-chat .chat-input textarea {
+  flex: 1 1 auto !important;
+  width: auto !important;
+  min-width: 0 !important;
+  min-height: 44px !important;
+  max-height: 34vh !important;
+  padding: 11px 15px !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 22px !important;
+  background: var(--surface-2) !important;
+  font-size: 16px !important;
+  line-height: 1.45 !important;
+  resize: none !important;
+}
+
+html.ly-chat .chat-input textarea:focus {
+  outline: none !important;
+  border-color: var(--accent-soft-2) !important;
+  background: var(--surface) !important;
+  box-shadow: 0 0 0 3px var(--ring) !important;
+}
+
+html.ly-chat .chat-input button {
+  flex: 0 0 auto !important;
+  min-width: 0 !important;
+  height: 44px !important;
+  padding: 0 18px !important;
+  border-radius: 22px !important;
+  font-size: 14px !important;
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------------------
+ * 5. 会话列表抽屉
+ * -------------------------------------------------------------------------*/
+
+html.ly-chat .pg-list {
+  position: fixed !important;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 84vw !important;
+  width: min(84vw, 340px) !important;
+  max-height: none !important;
+  margin: 0 !important;
+  padding: 14px 12px 12px !important;
+  z-index: 80;
+  background: var(--surface) !important;
+  border-right: 1px solid var(--line);
+  box-shadow: 0 24px 56px rgba(30, 33, 24, 0.22);
+  transform: translateX(-104%);
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+  overflow: hidden;
+}
+
+html.ly-chat.ly-convo-open .pg-list {
+  transform: translateX(0);
+}
+
+html.ly-chat .pg-list .list-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 4px -6px 0 !important;
+  padding: 0 6px !important;
+}
+
+html.ly-chat .pg-list .conv-item {
+  min-height: 44px;
+  padding: 10px 12px !important;
+  border-radius: 11px !important;
+  font-size: 14px !important;
+}
+
+html.ly-chat .pg-list .conv-item.on {
+  font-weight: 500;
+}
+
+html.ly-chat .ly-backdrop {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 75;
+  background: rgba(24, 30, 25, 0.42);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.26s ease;
+}
+
+html.ly-chat.ly-convo-open .ly-backdrop {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ---------------------------------------------------------------------------
+ * 6. 回到底部
+ * -------------------------------------------------------------------------*/
+
+html.ly-chat .ly-tobottom {
+  position: absolute;
+  right: 14px;
+  bottom: 86px;
+  z-index: 6;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--text-2);
+  box-shadow: var(--shadow-2);
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+html.ly-chat .ly-tobottom.on {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+html.ly-chat .ly-tobottom svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}

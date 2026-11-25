@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 自适应图标前景：白色对话气泡，内容控制在 108dp 画布中央 72dp 安全区内 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <path
+        android:fillColor="#F7F5EF"
+        android:pathData="M36,30 H72 A12,12 0 0 1 84,42 V58 A12,12 0 0 1 72,70 H46 L30,80 L34,70 H36 A12,12 0 0 1 24,58 V42 A12,12 0 0 1 36,30 Z" />
+
+    <path
+        android:fillColor="#1E5C46"
+        android:pathData="M38.6,50 a3.4,3.4 0 1,0 6.8,0 a3.4,3.4 0 1,0 -6.8,0 Z" />
+    <path
+        android:fillColor="#1E5C46"
+        android:pathData="M50.6,50 a3.4,3.4 0 1,0 6.8,0 a3.4,3.4 0 1,0 -6.8,0 Z" />
+    <path
+        android:fillColor="#1E5C46"
+        android:pathData="M62.6,50 a3.4,3.4 0 1,0 6.8,0 a3.4,3.4 0 1,0 -6.8,0 Z" />
+</vector>
